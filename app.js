@@ -6,6 +6,14 @@ $(document).ready( function() {
 		var tags = $(this).find("input[name='tags']").val();
 		getUnanswered(tags);
 	});
+
+	$('.inspiration-getter').submit( function(event){
+		// zero out results if previous search has run
+		$('.results').html('');
+		// get the value of the tags the user submitted
+		var tags = $(this).find("input[name='answerers']").val();
+		getInspired(tags);
+	});
 });
 
 // this function takes the question object returned by StackOverflow 
@@ -41,6 +49,26 @@ var showQuestion = function(question) {
 	return result;
 };
 
+var showAnswerer = function(answerer) {
+	
+	// clone our result template code
+	var result = $('.templates .inspire').clone();
+	
+	// Set the asker properties in result
+	var answererElem = result.find('.inspire-text a');
+	answererElem.attr('href', answerer.user.link);
+	answererElem.text(answerer.user.display_name);
+
+	// set the number of posts property in result
+	var postCount = result.find('.postCount');
+	postCount.text(answerer.post_count);
+
+	// set the user score property in result
+	var score = result.find('.score');
+	score.text(answerer.score);
+
+	return result;
+};
 
 // this function takes the results object from StackOverflow
 // and creates info about search results to be appended to DOM
@@ -88,5 +116,30 @@ var getUnanswered = function(tags) {
 	});
 };
 
+var getInspired = function(tags) {
+	
+	// the parameters we need to pass in our request to StackOverflow's API
+	var request = {site: 'stackoverflow'};
+	
+	var result = $.ajax({
+		url: "http://api.stackexchange.com/2.2/tags/"+tags+"/top-answerers/all_time",
+		data: request,
+		dataType: "jsonp",
+		type: "GET",
+		})
+	.done(function(result){
+		var searchResults = showSearchResults(tags, result.items.length);
 
+		$('.search-results').html(searchResults);
 
+		$.each(result.items, function(i, item) {
+			var answerer = showAnswerer(item);
+			$('.results').append(answerer);
+		});
+	})
+	.fail(function(jqXHR, error, errorThrown){
+		var errorElem = showError(error);
+		$('.search-results').append(errorElem);
+	});
+};
+	

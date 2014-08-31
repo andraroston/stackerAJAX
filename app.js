@@ -142,4 +142,3 @@ var getInspired = function(tags) {
 		$('.search-results').append(errorElem);
 	});
 };
-	
